@@ -29,22 +29,18 @@ body {
     border: 1px solid #000;
 }
 
-#controls {
-    display: none; /* Hidden on desktop */
+#shootButton {
     position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-}
-
-#controls button {
-    padding: 10px 20px;
-    margin: 0 5px;
-    font-size: 18px;
-    background-color: #FF8C00; /* Darker orange */
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 30px;
+    font-size: 20px;
+    background-color: #FF4500;
     border: none;
     color: white;
     cursor: pointer;
+    border-radius: 5px;
+    display: none; /* Hidden by default */
 }
 
 #restart {
@@ -60,7 +56,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    #controls {
-        display: block; /* Show controls on mobile */
-    }
+    #shootButton {
+        display: block; /* Show on mobile */
+}
 }

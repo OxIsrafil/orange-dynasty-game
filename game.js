@@ -7,6 +7,41 @@ const ctx = canvas.getContext('2d');
 
 let gameStarted = false;
 
+// Mobile touch controls
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!gameStarted) return;
+    const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
+    const deltaX = touchX - touchStartX;
+    const deltaY = touchY - touchStartY;
+    player.x += deltaX;
+    player.y += deltaY;
+    touchStartX = touchX;
+    touchStartY = touchY;
+    // Keep player within bounds
+    if (player.x < 0) player.x = 0;
+    if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+    if (player.y < 0) player.y = 0;
+    if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
+});
+
+// Shoot button for mobile
+document.getElementById('shootButton').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (!gameStarted) return;
+    player.shoot();
+});
+
 // Base dimensions for scaling
 const BASE_WIDTH = 800;
 const BASE_HEIGHT = 600;
@@ -78,16 +113,18 @@ class Player {
         this.maxCooldown = 20;
     }
     draw() {
-        ctx.drawImage(playerImg, this.x, this.y, this.width, this.height);
+        if (playerImg.complete && playerImg.naturalWidth !== 0) {
+            ctx.drawImage(playerImg, this.x, this.y, this.width, this.height);
+        }
     }
     move(direction) {
-        if (gameOver) return;
         switch (direction) {
             case 'left': this.x -= this.speed; break;
             case 'right': this.x += this.speed; break;
             case 'up': this.y -= this.speed; break;
             case 'down': this.y += this.speed; break;
         }
+        // Keep player within bounds
         if (this.x < 0) this.x = 0;
         if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
         if (this.y < 0) this.y = 0;
@@ -115,7 +152,9 @@ class Enemy {
         this.shootTimer = Math.random() * 100;
     }
     draw() {
-        ctx.drawImage(enemyImg, this.x, this.y, this.width, this.height);
+        if (enemyImg.complete && enemyImg.naturalWidth !== 0) {
+            ctx.drawImage(enemyImg, this.x, this.y, this.width, this.height);
+        }
     }
     update() {
         this.x -= this.speed;
@@ -138,7 +177,9 @@ class Boss extends Enemy {
         this.shootTimer = 50;
     }
     draw() {
-        ctx.drawImage(bossImg, this.x, this.y, this.width, this.height);
+        if (bossImg.complete && bossImg.naturalWidth !== 0) {
+            ctx.drawImage(bossImg, this.x, this.y, this.width, this.height);
+        }
     }
     update() {
         this.x -= this.speed;
@@ -171,7 +212,9 @@ class Projectile {
     }
     draw() {
         const img = this.type === 'player' ? projectilePlayerImg : projectileEnemyImg;
-        ctx.drawImage(img, this.x, this.y, this.width, this.height);
+        if (img.complete && img.naturalWidth !== 0) {
+            ctx.drawImage(img, this.x, this.y, this.width, this.height);
+        }
     }
     update() {
         this.x += this.speed;
@@ -188,7 +231,9 @@ class Collectible {
         this.speed = 2 * scaleX;
     }
     draw() {
-        ctx.drawImage(coinImg, this.x, this.y, this.width, this.height);
+        if (coinImg.complete && coinImg.naturalWidth !== 0) {
+            ctx.drawImage(coinImg, this.x, this.y, this.width, this.height);
+        }
     }
     update() {
         this.x -= this.speed;
@@ -205,16 +250,24 @@ let gameOver = false;
 let backgroundX = 0;
 let bossThreshold = 100;
 
-// Spawn enemies and collectibles
+// Spawning intervals
+let enemyInterval, collectibleInterval;
+
 function spawnEnemies() {
-    setInterval(() => {
+    enemyInterval = setInterval(() => {
         if (!gameOver) enemies.push(new Enemy());
     }, 2000);
 }
+
 function spawnCollectibles() {
-    setInterval(() => {
+    collectibleInterval = setInterval(() => {
         if (!gameOver) collectibles.push(new Collectible());
     }, 5000);
+}
+
+function stopSpawning() {
+    clearInterval(enemyInterval);
+    clearInterval(collectibleInterval);
 }
 
 // Collision detection
@@ -251,34 +304,35 @@ function checkCollisions() {
         }
     });
 }
+
 function isColliding(a, b) {
     return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
+// Desktop controls
+document.addEventListener('keydown', (e) => {
+    if (!gameStarted) return;
+    switch (e.code) {
+        case 'KeyA': player.move('left'); break;
+        case 'KeyD': player.move('right'); break;
+        case 'KeyW': player.move('up'); break;
+        case 'KeyS': player.move('down'); break;
+        case 'Space': player.shoot(); break;
+    }
+});
 
-// Input handling
-const keys = {};
-document.addEventListener('keydown', (e) => { keys[e.code] = true; });
-document.addEventListener('keyup', (e) => { keys[e.code] = false; });
-document.getElementById('left').addEventListener('touchstart', () => keys['ArrowLeft'] = true);
-document.getElementById('left').addEventListener('touchend', () => keys['ArrowLeft'] = false);
-document.getElementById('right').addEventListener('touchstart', () => keys['ArrowRight'] = true);
-document.getElementById('right').addEventListener('touchend', () => keys['ArrowRight'] = false);
-document.getElementById('up').addEventListener('touchstart', () => keys['ArrowUp'] = true);
-document.getElementById('up').addEventListener('touchend', () => keys['ArrowUp'] = false);
-document.getElementById('down').addEventListener('touchstart', () => keys['ArrowDown'] = true);
-document.getElementById('down').addEventListener('touchend', () => keys['ArrowDown'] = false);
-document.getElementById('shoot').addEventListener('touchstart', () => keys['Space'] = true);
-document.getElementById('shoot').addEventListener('touchend', () => keys['Space'] = false);
+// Mouse click for shooting on desktop
+canvas.addEventListener('click', () => {
+    if (!gameStarted) return;
+    player.shoot();
+});
 
 // Update game state
 function update() {
-    if (gameOver) return;
-    if (keys['ArrowLeft']) player.move('left');
-    if (keys['ArrowRight']) player.move('right');
-    if (keys['ArrowUp']) player.move('up');
-    if (keys['ArrowDown']) player.move('down');
-    if (keys['Space']) player.shoot();
+    if (gameOver) {
+        stopSpawning(); // Stop spawning when game over
+        return;
+    }
     player.update();
     enemies.forEach((enemy, index) => {
         enemy.update();
@@ -314,24 +368,10 @@ function render() {
     if (backgroundX <= -canvas.width) backgroundX = 0;
 
     // Draw other elements only if their images are loaded
-    if (playerImg.complete && playerImg.naturalWidth !== 0) player.draw();
-    enemies.forEach(enemy => {
-        if (enemy instanceof Boss && bossImg.complete && bossImg.naturalWidth !== 0) {
-            enemy.draw();
-        } else if (enemyImg.complete && enemyImg.naturalWidth !== 0) {
-            enemy.draw();
-        }
-    });
-    projectiles.forEach(proj => {
-        if (proj.type === 'player' && projectilePlayerImg.complete && projectilePlayerImg.naturalWidth !== 0) {
-            proj.draw();
-        } else if (projectileEnemyImg.complete && projectileEnemyImg.naturalWidth !== 0) {
-            proj.draw();
-        }
-    });
-    if (coinImg.complete && coinImg.naturalWidth !== 0) {
-        collectibles.forEach(collectible => collectible.draw());
-    }
+    player.draw();
+    enemies.forEach(enemy => enemy.draw());
+    projectiles.forEach(proj => proj.draw());
+    collectibles.forEach(collectible => collectible.draw());
 
     // Draw UI elements (score, lives, game over)
     ctx.fillStyle = 'black';
@@ -351,28 +391,23 @@ function render() {
 
 // Game loop
 function gameLoop() {
-    if (!gameStarted) return; // Add this line
+    if (!gameStarted) return;
     update();
     render();
     requestAnimationFrame(gameLoop);
 }
 
+// Start game
 function startGame() {
-    if (gameStarted) return; // Prevent multiple starts
+    if (gameStarted) return;
     gameStarted = true;
-
-    // Show game elements, hide start screen
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameCanvas').style.display = 'block';
-    document.getElementById('controls').style.display = 'block';
+    document.getElementById('shootButton').style.display = 'block'; // Show Shoot button
     document.getElementById('restart').style.display = 'block';
-
-    // Initialize game objects
     player = new Player();
     spawnEnemies();
     spawnCollectibles();
-
-    // Start the game loop
     gameLoop();
 }
 
@@ -380,6 +415,7 @@ document.getElementById('playButton').addEventListener('click', startGame);
 
 // Restart game
 document.getElementById('restart').addEventListener('click', () => {
+    stopSpawning(); // Clear existing intervals
     player = new Player();
     enemies = [];
     projectiles = [];
@@ -387,4 +423,6 @@ document.getElementById('restart').addEventListener('click', () => {
     score = 0;
     gameOver = false;
     bossThreshold = 100;
+    spawnEnemies(); // Restart spawning
+    spawnCollectibles();
 });
