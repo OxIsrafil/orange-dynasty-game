@@ -417,6 +417,7 @@ function startGame() {
     gameLoop();
 }
 
+
 document.getElementById('playButton').addEventListener('click', startGame);
 
 // Restart game
