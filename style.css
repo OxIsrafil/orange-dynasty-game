@@ -1,0 +1,49 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #FFA500; /* Orange background */
+}
+
+#gameCanvas {
+    border: 1px solid #000;
+}
+
+#controls {
+    display: none; /* Hidden on desktop */
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+#controls button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    font-size: 18px;
+    background-color: #FF8C00; /* Darker orange */
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+#restart {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #FF4500; /* Orange-red */
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    #controls {
+        display: block; /* Show controls on mobile */
+    }
+}
