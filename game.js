@@ -7,6 +7,9 @@ const ctx = canvas.getContext('2d');
 
 let gameStarted = false;
 
+// Track key states for continuous movement
+const keys = {};
+
 // Mobile touch controls
 let touchStartX = 0;
 let touchStartY = 0;
@@ -107,10 +110,10 @@ class Player {
         this.height = 50 * scaleY;
         this.x = 100 * scaleX;
         this.y = (canvas.height - this.height) / 2;
-        this.speed = 5 * scaleX;
+        this.speed = 5 * scaleX; // Adjust speed as needed
         this.lives = 3;
         this.shootCooldown = 0;
-        this.maxCooldown = 20;
+        this.maxCooldown = 20; // Adjust for shooting speed
     }
     draw() {
         if (playerImg.complete && playerImg.naturalWidth !== 0) {
@@ -309,16 +312,13 @@ function isColliding(a, b) {
     return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
-// Desktop controls
+// Desktop controls: Track key presses
 document.addEventListener('keydown', (e) => {
-    if (!gameStarted) return;
-    switch (e.code) {
-        case 'KeyA': player.move('left'); break;
-        case 'KeyD': player.move('right'); break;
-        case 'KeyW': player.move('up'); break;
-        case 'KeyS': player.move('down'); break;
-        case 'Space': player.shoot(); break;
-    }
+    keys[e.code] = true;
+});
+
+document.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
 });
 
 // Mouse click for shooting on desktop
@@ -333,6 +333,12 @@ function update() {
         stopSpawning(); // Stop spawning when game over
         return;
     }
+    // Continuous movement based on key states
+    if (keys['KeyA']) player.move('left');
+    if (keys['KeyD']) player.move('right');
+    if (keys['KeyW']) player.move('up');
+    if (keys['KeyS']) player.move('down');
+    if (keys['Space']) player.shoot();
     player.update();
     enemies.forEach((enemy, index) => {
         enemy.update();
