@@ -32,19 +32,32 @@ resizeCanvas();
 
 // Load assets (images and sounds)
 const playerImg = new Image();
-playerImg.src = 'assets/player.png'; // Your player image (min 50x50)
+playerImg.src = 'assets/player.png';
+playerImg.onerror = () => console.error("Failed to load player.png");
+
 const enemyImg = new Image();
-enemyImg.src = 'assets/enemy1.png'; // Your enemy image (min 50x50)
+enemyImg.src = 'assets/enemy1.png';
+enemyImg.onerror = () => console.error("Failed to load enemy1.png");
+
 const bossImg = new Image();
-bossImg.src = 'assets/boss.png'; // Your boss image (min 100x100)
+bossImg.src = 'assets/boss.png';
+bossImg.onerror = () => console.error("Failed to load boss.png");
+
 const projectilePlayerImg = new Image();
-projectilePlayerImg.src = 'assets/projectile_player.png'; // Player projectile
+projectilePlayerImg.src = 'assets/projectile_player.png';
+projectilePlayerImg.onerror = () => console.error("Failed to load projectile_player.png");
+
 const projectileEnemyImg = new Image();
-projectileEnemyImg.src = 'assets/projectile_enemy.png'; // Enemy projectile
+projectileEnemyImg.src = 'assets/projectile_enemy.png';
+projectileEnemyImg.onerror = () => console.error("Failed to load projectile_enemy.png");
+
 const coinImg = new Image();
-coinImg.src = 'assets/coin.png'; // Sign logo for coins (min 30x30)
+coinImg.src = 'assets/coin.png';
+coinImg.onerror = () => console.error("Failed to load coin.png");
+
 const backgroundImg = new Image();
-backgroundImg.src = 'assets/background.png'; // Background (wider than 800px)
+backgroundImg.src = 'assets/background.png';
+backgroundImg.onerror = () => console.error("Failed to load background.png");
 
 const coinSound = new Audio('assets/coin_collect.mp3');
 const hitSound = new Audio('assets/enemy_hit.mp3'); // Player hit
@@ -240,6 +253,7 @@ function isColliding(a, b) {
     return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
+
 // Input handling
 const keys = {};
 document.addEventListener('keydown', (e) => { keys[e.code] = true; });
@@ -286,14 +300,38 @@ function update() {
 // Render the game
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, backgroundX, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+    // Draw background (fallback to solid color if image fails to load)
+    if (backgroundImg.complete && backgroundImg.naturalWidth !== 0) {
+        ctx.drawImage(backgroundImg, backgroundX, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = '#FFA500'; // Fallback to solid orange background
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     backgroundX -= 1 * scaleX;
     if (backgroundX <= -canvas.width) backgroundX = 0;
-    player.draw();
-    enemies.forEach(enemy => enemy.draw());
-    projectiles.forEach(proj => proj.draw());
-    collectibles.forEach(collectible => collectible.draw());
+
+    // Draw other elements only if their images are loaded
+    if (playerImg.complete && playerImg.naturalWidth !== 0) player.draw();
+    enemies.forEach(enemy => {
+        if (enemy instanceof Boss && bossImg.complete && bossImg.naturalWidth !== 0) {
+            enemy.draw();
+        } else if (enemyImg.complete && enemyImg.naturalWidth !== 0) {
+            enemy.draw();
+        }
+    });
+    projectiles.forEach(proj => {
+        if (proj.type === 'player' && projectilePlayerImg.complete && projectilePlayerImg.naturalWidth !== 0) {
+            proj.draw();
+        } else if (projectileEnemyImg.complete && projectileEnemyImg.naturalWidth !== 0) {
+            proj.draw();
+        }
+    });
+    if (coinImg.complete && coinImg.naturalWidth !== 0) {
+        collectibles.forEach(collectible => collectible.draw());
+    }
+
+    // Draw UI elements (score, lives, game over)
     ctx.fillStyle = 'black';
     ctx.font = `${20 * scaleY}px Arial`;
     ctx.fillText(`Score: ${score}`, 10 * scaleX, 30 * scaleY);
