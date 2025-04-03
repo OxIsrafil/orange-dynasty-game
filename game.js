@@ -5,6 +5,8 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+let gameStarted = false;
+
 // Base dimensions for scaling
 const BASE_WIDTH = 800;
 const BASE_HEIGHT = 600;
@@ -349,10 +351,32 @@ function render() {
 
 // Game loop
 function gameLoop() {
+    if (!gameStarted) return; // Add this line
     update();
     render();
     requestAnimationFrame(gameLoop);
 }
+
+function startGame() {
+    if (gameStarted) return; // Prevent multiple starts
+    gameStarted = true;
+
+    // Show game elements, hide start screen
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameCanvas').style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
+    document.getElementById('restart').style.display = 'block';
+
+    // Initialize game objects
+    player = new Player();
+    spawnEnemies();
+    spawnCollectibles();
+
+    // Start the game loop
+    gameLoop();
+}
+
+document.getElementById('playButton').addEventListener('click', startGame);
 
 // Restart game
 document.getElementById('restart').addEventListener('click', () => {
@@ -364,8 +388,3 @@ document.getElementById('restart').addEventListener('click', () => {
     gameOver = false;
     bossThreshold = 100;
 });
-
-// Start the game
-spawnEnemies();
-spawnCollectibles();
-gameLoop();

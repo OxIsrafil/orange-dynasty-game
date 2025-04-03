@@ -8,6 +8,23 @@ body {
     background-color: #FFA500; /* Orange background */
 }
 
+#startScreen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#playButton {
+    padding: 20px 40px;
+    font-size: 24px;
+    background-color: #FF4500; /* Orange-red */
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
 #gameCanvas {
     border: 1px solid #000;
 }
